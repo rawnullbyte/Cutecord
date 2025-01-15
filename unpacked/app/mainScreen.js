@@ -672,40 +672,42 @@ function setMainWindowTitle(title) {
   }
 }
 async function checkForUpdatesWithUpdater(updater) {
-  if (updaterState === _Constants.UpdaterEvents.UPDATE_NOT_AVAILABLE) {
-    setUpdaterState(_Constants.UpdaterEvents.CHECKING_FOR_UPDATES);
-    try {
-      let installedAnything = false;
-      const progressCallback = progress => {
-        const task = progress.task.HostInstall || progress.task.ModuleInstall;
-        if (task != null && progress.state === 'Complete') {
-          if (!installedAnything) {
-            installedAnything = true;
-            setUpdaterState(_Constants.UpdaterEvents.UPDATE_AVAILABLE);
-          }
-        }
-        if (task != null && progress.state.Failed != null) {
-          if (progress.task.HostInstall != null) {
-            retryUpdateOptions.skip_host_delta = true;
-          } else if (progress.task.ModuleInstall != null) {
-            retryUpdateOptions.skip_module_delta[task.version.module.name] = true;
-          }
-        }
-      };
-      if (updater.updateToLatestWithOptions) {
-        await updater.updateToLatestWithOptions(retryUpdateOptions, progressCallback);
-      } else {
-        await updater.updateToLatest(progressCallback);
-      }
-      setUpdaterState(installedAnything ? _Constants.UpdaterEvents.UPDATE_DOWNLOADED : _Constants.UpdaterEvents.UPDATE_NOT_AVAILABLE);
-    } catch (e) {
-      console.error('Update to latest failed: ', e);
-      updaterState = _Constants.UpdaterEvents.UPDATE_NOT_AVAILABLE;
-      webContentsSend(_Constants.UpdaterEvents.UPDATE_ERROR);
-    }
-  } else {
-    webContentsSend(updaterState);
-  }
+  // if (updaterState === _Constants.UpdaterEvents.UPDATE_NOT_AVAILABLE) {
+  //   setUpdaterState(_Constants.UpdaterEvents.CHECKING_FOR_UPDATES);
+  //   try {
+  //     let installedAnything = false;
+  //     const progressCallback = progress => {
+  //       const task = progress.task.HostInstall || progress.task.ModuleInstall;
+  //       if (task != null && progress.state === 'Complete') {
+  //         if (!installedAnything) {
+  //           installedAnything = true;
+  //           setUpdaterState(_Constants.UpdaterEvents.UPDATE_AVAILABLE);
+  //         }
+  //       }
+  //       if (task != null && progress.state.Failed != null) {
+  //         if (progress.task.HostInstall != null) {
+  //           retryUpdateOptions.skip_host_delta = true;
+  //         } else if (progress.task.ModuleInstall != null) {
+  //           retryUpdateOptions.skip_module_delta[task.version.module.name] = true;
+  //         }
+  //       }
+  //     };
+  //     if (updater.updateToLatestWithOptions) {
+  //       await updater.updateToLatestWithOptions(retryUpdateOptions, progressCallback);
+  //     } else {
+  //       await updater.updateToLatest(progressCallback);
+  //     }
+  //     setUpdaterState(installedAnything ? _Constants.UpdaterEvents.UPDATE_DOWNLOADED : _Constants.UpdaterEvents.UPDATE_NOT_AVAILABLE);
+  //   } catch (e) {
+  //     console.error('Update to latest failed: ', e);
+  //     updaterState = _Constants.UpdaterEvents.UPDATE_NOT_AVAILABLE;
+  //     webContentsSend(_Constants.UpdaterEvents.UPDATE_ERROR);
+  //   }
+  // } else {
+  //   webContentsSend(updaterState);
+  // }
+  setUpdaterState(_Constants.UpdaterEvents.UPDATE_NOT_AVAILABLE);
+  webContentsSend(updaterState);
 }
 const analyticsState = {
   ready: false,
