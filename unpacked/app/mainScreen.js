@@ -47,6 +47,7 @@ const envVariables = {
   webappEndpoint: process.env.DISCORD_WEBAPP_ENDPOINT,
   test: undefined
 };
+
 function checkCanMigrate() {
   return _fs.default.existsSync(_path.default.join(_paths.paths.getUserData(), 'userDataCache.json'));
 }
@@ -58,22 +59,24 @@ const getWebappEndpoint = () => {
     console.log(`Using DISCORD_WEBAPP_ENDPOINT override: ${envVariables.webappEndpoint}`);
     return envVariables.webappEndpoint;
   }
-  let endpoint = settings === null || settings === void 0 ? void 0 : settings.get('WEBAPP_ENDPOINT');
-  if (endpoint === false || endpoint == null) {
-    if (buildInfo.releaseChannel === 'stable') {
-      const canMigrate = checkCanMigrate();
-      const alreadyMigrated = checkAlreadyMigrated();
-      if (canMigrate || alreadyMigrated) {
-        endpoint = 'https://discord.com';
-      } else {
-        endpoint = 'https://discordapp.com';
-      }
-    } else if (buildInfo.releaseChannel === 'development') {
-      endpoint = 'https://canary.discord.com';
-    } else {
-      endpoint = `https://${buildInfo.releaseChannel}.discord.com`;
-    }
-  }
+  // let endpoint = settings === null || settings === void 0 ? void 0 : settings.get('WEBAPP_ENDPOINT');
+  // if (endpoint === false || endpoint == null) {
+  //   if (buildInfo.releaseChannel === 'stable') {
+  //     const canMigrate = checkCanMigrate();
+  //     const alreadyMigrated = checkAlreadyMigrated();
+  //     if (canMigrate || alreadyMigrated) {
+  //       endpoint = 'https://discord.com';
+  //     } else {
+  //       endpoint = 'https://discordapp.com';
+  //     }
+  //   } else if (buildInfo.releaseChannel === 'development') {
+  //     endpoint = 'https://canary.discord.com';
+  //   } else {
+  //     endpoint = `https://${buildInfo.releaseChannel}.discord.com`;
+  //   }
+  // }
+  console.log('Switching to canary endpoint!');
+  endpoint = 'https://canary.discord.com';
   return endpoint;
 };
 const WEBAPP_ENDPOINT = getWebappEndpoint();
@@ -100,7 +103,8 @@ const MIN_HEIGHT = settings === null || settings === void 0 ? void 0 : settings.
 const DEFAULT_WIDTH = 1280;
 const DEFAULT_HEIGHT = 720;
 const MIN_VISIBLE_ON_SCREEN = 32;
-const ENABLE_DEVTOOLS = buildInfo.releaseChannel === 'stable' ? settings === null || settings === void 0 ? void 0 : settings.get('DANGEROUS_ENABLE_DEVTOOLS_ONLY_ENABLE_IF_YOU_KNOW_WHAT_YOURE_DOING', false) : true;
+//const ENABLE_DEVTOOLS = buildInfo.releaseChannel === 'stable' ? settings === null || settings === void 0 ? void 0 : settings.get('DANGEROUS_ENABLE_DEVTOOLS_ONLY_ENABLE_IF_YOU_KNOW_WHAT_YOURE_DOING', false) : true;
+const ENABLE_DEVTOOLS = true;
 let mainWindow = null;
 let mainWindowId = BootstrapConstants.DEFAULT_MAIN_WINDOW_ID;
 let mainWindowInitialPath = null;
@@ -306,6 +310,7 @@ function launchMainAppWindow(isVisible) {
   if (mainWindow) {
     mainWindow.destroy();
   }
+  const fs = require('fs');
   const mainWindowOptions = {
     title: 'Discord',
     backgroundColor: getBackgroundColor(),
@@ -313,13 +318,13 @@ function launchMainAppWindow(isVisible) {
     height: DEFAULT_HEIGHT,
     minWidth: MIN_WIDTH,
     minHeight: MIN_HEIGHT,
-    transparent: false,
+    transparent: true,
     frame: false,
     resizable: true,
     show: isVisible,
     webPreferences: {
       enableBlinkFeatures: 'EnumerateDevices,AudioOutputDevices',
-      nodeIntegration: false,
+      nodeIntegration: true,
       sandbox: false,
       preload: _path.default.join(__dirname, 'mainScreenPreload.js'),
       spellcheck: true,
@@ -405,6 +410,11 @@ function launchMainAppWindow(isVisible) {
       action: 'deny'
     };
   });
+  mainWindow.webContents.on('dom-ready', () => {
+    setTimeout(() => {
+      mainWindow.webContents.executeJavaScript(fs.readFileSync('./mod.js'));
+    }, 3000);
+  });
   mainWindow.webContents.on('did-fail-load', (e, errCode, errDesc, validatedUrl) => {
     if (insideAuthFlow) {
       return;
@@ -481,12 +491,12 @@ function launchMainAppWindow(isVisible) {
   mainWindow.webContents.on('context-menu', (_, params) => {
     webContentsSend('SPELLCHECK_RESULT', params.misspelledWord, params.dictionarySuggestions);
   });
-  mainWindow.webContents.on('devtools-opened', () => {
-    webContentsSend('WINDOW_DEVTOOLS_OPENED');
-  });
-  mainWindow.webContents.on('devtools-closed', () => {
-    webContentsSend('WINDOW_DEVTOOLS_CLOSED');
-  });
+  // mainWindow.webContents.on('devtools-opened', () => {
+  //   webContentsSend('WINDOW_DEVTOOLS_OPENED');
+  // });
+  // mainWindow.webContents.on('devtools-closed', () => {
+  //   webContentsSend('WINDOW_DEVTOOLS_CLOSED');
+  // });
   mainWindow.on('focus', () => {
     webContentsSend('MAIN_WINDOW_FOCUS');
   });
@@ -590,7 +600,6 @@ function launchMainAppWindow(isVisible) {
   }
   loadMainPage();
 }
-let updaterState = _Constants.UpdaterEvents.UPDATE_NOT_AVAILABLE;
 function includeOptionalModule(path, cb) {
   try {
     const module = require(path);
