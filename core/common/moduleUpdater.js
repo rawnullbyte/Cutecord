@@ -187,8 +187,7 @@ function checkOSVersionSupported() {
       console.error(`Failed to retrieve the MacOS version for update skips: ${e.message}`);
     }
   }
-  //return true;
-  return false;
+  return true;
 }
 function init(_endpoint, _settings, _buildInfo) {
   var _settings2, _settings3, _settings4, _settings5;
@@ -196,7 +195,8 @@ function init(_endpoint, _settings, _buildInfo) {
   settings = _settings;
   const buildInfo = _buildInfo;
   updatable = buildInfo.version !== '0.0.0' && !buildInfo.debug || ((_settings2 = settings) === null || _settings2 === void 0 ? void 0 : _settings2.get(ALWAYS_ALLOW_UPDATES));
-  const hostUpdatable = buildInfo.version !== '0.0.0' && !buildInfo.debug && checkOSVersionSupported() || ((_settings3 = settings) === null || _settings3 === void 0 ? void 0 : _settings3.get(ALWAYS_ALLOW_UPDATES));
+  // const hostUpdatable = buildInfo.version !== '0.0.0' && !buildInfo.debug && checkOSVersionSupported() || ((_settings3 = settings) === null || _settings3 === void 0 ? void 0 : _settings3.get(ALWAYS_ALLOW_UPDATES));
+  const hostUpdatable = false;
   initPathsOnly(buildInfo);
   logger = new LogStream(_path.default.join(paths.getUserData() ?? '', 'logs', 'legacyModulesUpdater.log'));
   bootstrapping = false;
